@@ -2,6 +2,7 @@
 const ReproductionManager = {
     currentMonth: new Date(),
     HEAT_CYCLE_DAYS: 21, // Default heat cycle for cattle
+    GESTATION_DAYS: 114, // Gestation period for calculating due date
 
     init() {
         this.bindEvents();
@@ -46,7 +47,7 @@ const ReproductionManager = {
         if (heats.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty-state-container">
+                    <td colspan="7" class="empty-state-container">
                         <div class="empty-state-icon">❤️</div>
                         <div class="empty-state-text">No hay registros de celo</div>
                     </td>
@@ -68,6 +69,7 @@ const ReproductionManager = {
     renderHeatRow(heat) {
         const animal = DataManager.getById(DB_KEYS.ANIMALS, heat.animalId);
         const nextHeat = this.calculateNextHeat(heat.date);
+        const dueDate = this.calculateDueDate(heat.date);
         const intensityLabels = { low: 'Baja', medium: 'Media', high: 'Alta' };
 
         return `
@@ -75,6 +77,7 @@ const ReproductionManager = {
                 <td>${animal ? `${animal.identifier} - ${animal.name}` : 'N/A'}</td>
                 <td>${new Date(heat.date).toLocaleDateString('es-ES')}</td>
                 <td><span class="status-badge pending">${nextHeat.toLocaleDateString('es-ES')}</span></td>
+                <td><span class="status-badge success">🐣 ${dueDate.toLocaleDateString('es-ES')}</span></td>
                 <td>${intensityLabels[heat.intensity] || '-'}</td>
                 <td>${heat.notes || '-'}</td>
                 <td>
@@ -319,6 +322,12 @@ const ReproductionManager = {
     calculateNextHeat(lastHeatDate) {
         const date = new Date(lastHeatDate);
         date.setDate(date.getDate() + this.HEAT_CYCLE_DAYS);
+        return date;
+    },
+
+    calculateDueDate(heatDate) {
+        const date = new Date(heatDate);
+        date.setDate(date.getDate() + this.GESTATION_DAYS);
         return date;
     },
 

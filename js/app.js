@@ -347,7 +347,7 @@ const App = {
                     <div class="table-container">
                         <table class="data-table" id="heatTable">
                             <thead>
-                                <tr><th>Animal</th><th>Fecha de Celo</th><th>Próximo Celo Estimado</th><th>Intensidad</th><th>Notas</th><th>Acciones</th></tr>
+                                <tr><th>Animal</th><th>Fecha de Celo</th><th>Próximo Celo Estimado</th><th>Fecha Probable de Parto</th><th>Intensidad</th><th>Notas</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="heatTableBody"></tbody>
                         </table>
