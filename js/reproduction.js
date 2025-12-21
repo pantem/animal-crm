@@ -4,6 +4,14 @@ const ReproductionManager = {
     HEAT_CYCLE_DAYS: 21, // Default heat cycle for cattle
     GESTATION_DAYS: 114, // Gestation period for calculating due date
 
+    // Helper to format date string without timezone issues
+    formatDateString(dateStr) {
+        if (!dateStr) return 'N/A';
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return dateStr;
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    },
+
     init() {
         this.bindEvents();
     },
@@ -75,8 +83,9 @@ const ReproductionManager = {
         return `
             <tr>
                 <td>${animal ? `${animal.identifier} - ${animal.name}` : 'N/A'}</td>
-                <td>${new Date(heat.date).toLocaleDateString('es-ES')}</td>
-                <td><span class="status-badge pending">${nextHeat.toLocaleDateString('es-ES')}</span></td>
+                <td>${this.formatDateString(heat.date)}</td>
+                <td><span class="status-badge pending">${this.formatDateString(nextHeat)}</span></td>
+                <td><span class="status-badge success">🐣 ${this.formatDateString(dueDate)}</span></td>
                 <td>${intensityLabels[heat.intensity] || '-'}</td>
                 <td>${heat.notes || '-'}</td>
                 <td>
@@ -127,10 +136,10 @@ const ReproductionManager = {
         return `
             <tr>
                 <td>${animal ? `${animal.identifier} - ${animal.name}` : 'N/A'}</td>
-                <td>${new Date(insemination.date).toLocaleDateString('es-ES')}</td>
+                <td>${this.formatDateString(insemination.date)}</td>
                 <td>${methodLabels[insemination.method] || '-'}</td>
                 <td>${insemination.sireCode || '-'}</td>
-                <td><span class="status-badge success">🐣 ${dueDate.toLocaleDateString('es-ES')}</span></td>
+                <td><span class="status-badge success">🐣 ${this.formatDateString(dueDate)}</span></td>
                 <td><span class="status-badge ${insemination.result || 'pending'}">${resultLabels[insemination.result] || 'Pendiente'}</span></td>
                 <td>
                     <div class="action-btns">
@@ -321,15 +330,23 @@ const ReproductionManager = {
     },
 
     calculateNextHeat(lastHeatDate) {
-        const date = new Date(lastHeatDate);
+        const parts = lastHeatDate.split('-');
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
         date.setDate(date.getDate() + this.HEAT_CYCLE_DAYS);
-        return date;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
 
-    calculateDueDate(heatDate) {
-        const date = new Date(heatDate);
+    calculateDueDate(dateStr) {
+        const parts = dateStr.split('-');
+        const date = new Date(parts[0], parts[1] - 1, parts[2]);
         date.setDate(date.getDate() + this.GESTATION_DAYS);
-        return date;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
 
     changeMonth(delta) {
