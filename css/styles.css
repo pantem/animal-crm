@@ -801,6 +801,23 @@ body {
     width: 6px;
     height: 6px;
     border-radius: 50%;
+    display: inline-block;
+}
+
+.calendar-day .event-dot.heat {
+    background: var(--danger);
+}
+
+.calendar-day .event-dot.insemination {
+    background: var(--secondary);
+}
+
+.calendar-day .event-dot.predicted {
+    background: var(--accent);
+}
+
+.calendar-day .event-dot.vaccination {
+    background: var(--primary);
 }
 
 /* Settings */

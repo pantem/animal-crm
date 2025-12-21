@@ -377,7 +377,7 @@ const ReproductionManager = {
         // Calculate predicted heats
         const predictedHeats = heats.map(h => ({
             animalId: h.animalId,
-            date: this.calculateNextHeat(h.date).toISOString().split('T')[0]
+            date: this.calculateNextHeat(h.date)
         }));
 
         // Build calendar
@@ -400,9 +400,21 @@ const ReproductionManager = {
             const dayPredicted = predictedHeats.filter(p => p.date === dateStr);
 
             let eventDots = '';
-            dayHeats.forEach(() => eventDots += '<span class="event-dot heat"></span>');
-            dayInseminations.forEach(() => eventDots += '<span class="event-dot insemination"></span>');
-            dayPredicted.forEach(() => eventDots += '<span class="event-dot predicted"></span>');
+            dayHeats.forEach(h => {
+                const animal = DataManager.getById(DB_KEYS.ANIMALS, h.animalId);
+                const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
+                eventDots += `<span class="event-dot heat" title="❤️ Celo: ${animalName}"></span>`;
+            });
+            dayInseminations.forEach(i => {
+                const animal = DataManager.getById(DB_KEYS.ANIMALS, i.animalId);
+                const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
+                eventDots += `<span class="event-dot insemination" title="🧬 Inseminación: ${animalName}"></span>`;
+            });
+            dayPredicted.forEach(p => {
+                const animal = DataManager.getById(DB_KEYS.ANIMALS, p.animalId);
+                const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
+                eventDots += `<span class="event-dot predicted" title="⏳ Celo estimado: ${animalName}"></span>`;
+            });
 
             html += `
                 <div class="calendar-day ${isToday ? 'today' : ''}">
