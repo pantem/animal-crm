@@ -20,7 +20,7 @@ const AnimalsManager = {
         if (animals.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="empty-state-container">
+                    <td colspan="7" class="empty-state-container">
                         <div class="empty-state-icon">🐄</div>
                         <div class="empty-state-text">No hay animales registrados</div>
                     </td>
@@ -46,9 +46,13 @@ const AnimalsManager = {
         const species = DataManager.getById(DB_KEYS.SPECIES, animal.speciesId);
         const statusClass = animal.status || 'active';
         const statusLabels = { active: 'Activo', sold: 'Vendido', deceased: 'Fallecido' };
+        const imageHtml = animal.image
+            ? `<img src="${animal.image}" alt="${animal.name}" class="animal-thumbnail" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 2px solid var(--glass-border);">`
+            : `<div class="animal-thumbnail-placeholder" style="width: 50px; height: 50px; border-radius: 8px; background: var(--glass-bg); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--glass-border); color: var(--text-muted); font-size: 20px;">📷</div>`;
 
         return `
             <tr>
+                <td>${imageHtml}</td>
                 <td><strong>${animal.identifier}</strong></td>
                 <td>${animal.name}</td>
                 <td>${species ? `${species.icon} ${species.name}` : 'N/A'}</td>
@@ -150,6 +154,22 @@ const AnimalsManager = {
                             </select>
                         </div>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">Foto del Animal</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div id="imagePreviewContainer" style="width: 100px; height: 100px; border-radius: 12px; background: var(--glass-bg); display: flex; align-items: center; justify-content: center; border: 2px dashed var(--glass-border); overflow: hidden;">
+                                ${animal?.image
+                    ? `<img src="${animal.image}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`
+                    : `<span style="color: var(--text-muted); font-size: 32px;">📷</span>`}
+                            </div>
+                            <div style="flex: 1;">
+                                <input type="file" id="animalImageInput" accept="image/*" style="display: none;">
+                                <button type="button" class="btn btn-secondary" id="selectImageBtn" style="margin-bottom: 0.5rem;">📷 Seleccionar Imagen</button>
+                                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">JPG, PNG o GIF. Máx 2MB</p>
+                            </div>
+                        </div>
+                        <input type="hidden" name="image" id="animalImageData" value="${animal?.image || ''}">
+                    </div>
                     <div id="customAttributesContainer"></div>
                     <div class="form-group">
                         <label class="form-label">Notas</label>
@@ -169,6 +189,7 @@ const AnimalsManager = {
                     sex: formData.get('sex'),
                     status: formData.get('status'),
                     notes: formData.get('notes'),
+                    image: document.getElementById('animalImageData')?.value || '',
                     customAttributes: {}
                 };
 
@@ -211,6 +232,32 @@ const AnimalsManager = {
             if (animal?.speciesId) {
                 this.loadCustomAttributes(animal.speciesId, animal.customAttributes);
             }
+
+            // Handle image upload
+            const imageInput = document.getElementById('animalImageInput');
+            const selectImageBtn = document.getElementById('selectImageBtn');
+            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+            const imageDataInput = document.getElementById('animalImageData');
+
+            selectImageBtn?.addEventListener('click', () => imageInput?.click());
+
+            imageInput?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 2 * 1024 * 1024) {
+                    Toast.show('La imagen no debe superar 2MB', 'error');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const base64 = event.target.result;
+                    imageDataInput.value = base64;
+                    imagePreviewContainer.innerHTML = `<img src="${base64}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover;">`;
+                };
+                reader.readAsDataURL(file);
+            });
         }, 100);
     },
 
@@ -307,6 +354,11 @@ const AnimalsManager = {
             title: `${animal.name} (${animal.identifier})`,
             content: `
                 <div style="display: grid; gap: 1rem;">
+                    ${animal.image ? `
+                        <div style="text-align: center;">
+                            <img src="${animal.image}" alt="${animal.name}" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 12px; border: 3px solid var(--glass-border);">
+                        </div>
+                    ` : ''}
                     <div class="card" style="padding: 1rem;">
                         <h4 style="margin-bottom: 0.5rem;">Información General</h4>
                         <p><strong>Especie:</strong> ${species ? `${species.icon} ${species.name}` : 'N/A'}</p>

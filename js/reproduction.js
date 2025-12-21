@@ -77,7 +77,6 @@ const ReproductionManager = {
                 <td>${animal ? `${animal.identifier} - ${animal.name}` : 'N/A'}</td>
                 <td>${new Date(heat.date).toLocaleDateString('es-ES')}</td>
                 <td><span class="status-badge pending">${nextHeat.toLocaleDateString('es-ES')}</span></td>
-                <td><span class="status-badge success">🐣 ${dueDate.toLocaleDateString('es-ES')}</span></td>
                 <td>${intensityLabels[heat.intensity] || '-'}</td>
                 <td>${heat.notes || '-'}</td>
                 <td>
@@ -123,6 +122,7 @@ const ReproductionManager = {
         const animal = DataManager.getById(DB_KEYS.ANIMALS, insemination.animalId);
         const methodLabels = { natural: 'Natural', artificial: 'Artificial' };
         const resultLabels = { pending: 'Pendiente', success: 'Exitosa', failed: 'Fallida' };
+        const dueDate = this.calculateDueDate(insemination.date);
 
         return `
             <tr>
@@ -130,6 +130,7 @@ const ReproductionManager = {
                 <td>${new Date(insemination.date).toLocaleDateString('es-ES')}</td>
                 <td>${methodLabels[insemination.method] || '-'}</td>
                 <td>${insemination.sireCode || '-'}</td>
+                <td><span class="status-badge success">🐣 ${dueDate.toLocaleDateString('es-ES')}</span></td>
                 <td><span class="status-badge ${insemination.result || 'pending'}">${resultLabels[insemination.result] || 'Pendiente'}</span></td>
                 <td>
                     <div class="action-btns">

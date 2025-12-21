@@ -232,7 +232,7 @@ const App = {
                 <div class="table-container">
                     <table class="data-table" id="animalsTable">
                         <thead>
-                            <tr><th>ID</th><th>Nombre</th><th>Especie</th><th>Fecha Nacimiento</th><th>Estado</th><th>Acciones</th></tr>
+                            <tr><th>Foto</th><th>ID</th><th>Nombre</th><th>Especie</th><th>Fecha Nacimiento</th><th>Estado</th><th>Acciones</th></tr>
                         </thead>
                         <tbody id="animalsTableBody"></tbody>
                     </table>
@@ -357,7 +357,7 @@ const App = {
                     <div class="table-container">
                         <table class="data-table" id="inseminationTable">
                             <thead>
-                                <tr><th>Animal</th><th>Fecha</th><th>Método</th><th>Semental/Código</th><th>Resultado</th><th>Acciones</th></tr>
+                                <tr><th>Animal</th><th>Fecha</th><th>Método</th><th>Semental/Código</th><th>Fecha Probable de Parto</th><th>Resultado</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="inseminationTableBody"></tbody>
                         </table>
