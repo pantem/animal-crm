@@ -43,7 +43,7 @@ app.use((err, req, res, next) => {
 export default app;
 
 // Start server if running directly (Local Development)
-if (process.argv[1] === __filename) {
+if (process.argv[1].toLowerCase() === __filename.toLowerCase()) {
     app.listen(PORT, () => {
         console.log(`\n🚀 Servidor iniciado en http://localhost:${PORT}`);
         console.log(`📡 API disponible en http://localhost:${PORT}/api`);
