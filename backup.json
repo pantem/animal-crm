@@ -1,0 +1,878 @@
+{
+  "species": [
+    {
+      "id": "bovino",
+      "name": "Bovino",
+      "description": "Ganado vacuno para carne y leche",
+      "icon": "🐄",
+      "attributes": [
+        {
+          "id": "raza",
+          "name": "Raza",
+          "type": "select",
+          "options": "Angus,Hereford,Brahman,Holstein,Charolais",
+          "required": true
+        },
+        {
+          "id": "peso",
+          "name": "Peso (kg)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "color",
+          "name": "Color",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "cuernos",
+          "name": "Tiene cuernos",
+          "type": "boolean",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "porcino",
+      "name": "Porcino",
+      "description": "Cerdos para producción",
+      "icon": "🐷",
+      "attributes": [
+        {
+          "id": "raza",
+          "name": "Raza",
+          "type": "select",
+          "options": "Duroc,Yorkshire,Landrace,Hampshire,Pietrain,F1 York-Landrace,F1 York-Pietrain",
+          "required": true
+        },
+        {
+          "id": "peso_(kg)",
+          "name": "Peso (kg)",
+          "type": "number",
+          "options": "",
+          "required": false
+        },
+        {
+          "id": "número_de_camada",
+          "name": "Número de camada",
+          "type": "number",
+          "options": "",
+          "required": false
+        },
+        {
+          "id": "arete",
+          "name": "Arete",
+          "type": "text",
+          "options": "",
+          "required": true
+        },
+        {
+          "id": "fecha_de_inseminación",
+          "name": "Fecha de Inseminación",
+          "type": "date",
+          "options": "",
+          "required": false
+        },
+        {
+          "id": "verraco",
+          "name": "Verraco",
+          "type": "text",
+          "options": "",
+          "required": false
+        },
+        {
+          "id": "granja_del_verraco",
+          "name": "Granja del Verraco",
+          "type": "text",
+          "options": "",
+          "required": false
+        }
+      ],
+      "updatedAt": "2025-12-14T15:43:01.344Z"
+    },
+    {
+      "id": "ovino",
+      "name": "Ovino",
+      "description": "Ovejas para lana y carne",
+      "icon": "🐑",
+      "attributes": [
+        {
+          "id": "raza",
+          "name": "Raza",
+          "type": "select",
+          "options": "Merino,Suffolk,Dorper,Texel,Romney",
+          "required": true
+        },
+        {
+          "id": "peso",
+          "name": "Peso (kg)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "lana",
+          "name": "Calidad de lana",
+          "type": "select",
+          "options": "Fina,Media,Gruesa",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "caprino",
+      "name": "Caprino",
+      "description": "Cabras para leche y carne",
+      "icon": "🐐",
+      "attributes": [
+        {
+          "id": "raza",
+          "name": "Raza",
+          "type": "select",
+          "options": "Boer,Saanen,Nubia,Alpina,Toggenburg",
+          "required": true
+        },
+        {
+          "id": "peso",
+          "name": "Peso (kg)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "produccion_leche",
+          "name": "Producción de leche (L/día)",
+          "type": "number",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "equino",
+      "name": "Equino",
+      "description": "Caballos y yeguas",
+      "icon": "🐴",
+      "attributes": [
+        {
+          "id": "raza",
+          "name": "Raza",
+          "type": "select",
+          "options": "Cuarto de Milla,Árabe,Pura Sangre,Appaloosa,Criollo",
+          "required": true
+        },
+        {
+          "id": "alzada",
+          "name": "Alzada (cm)",
+          "type": "number",
+          "required": false
+        },
+        {
+          "id": "color",
+          "name": "Color",
+          "type": "text",
+          "required": false
+        },
+        {
+          "id": "uso",
+          "name": "Uso",
+          "type": "select",
+          "options": "Trabajo,Deporte,Reproducción,Paseo",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "avicola",
+      "name": "Avícola",
+      "description": "Aves de corral",
+      "icon": "🐔",
+      "attributes": [
+        {
+          "id": "tipo",
+          "name": "Tipo",
+          "type": "select",
+          "options": "Gallina ponedora,Pollo de engorde,Pavo,Pato",
+          "required": true
+        },
+        {
+          "id": "produccion_huevos",
+          "name": "Producción huevos/semana",
+          "type": "number",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "animals": [
+    {
+      "identifier": "015",
+      "name": "la quince",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "Pietrain el Verraco",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "015",
+        "fecha_de_inseminación": "2025-10-21",
+        "verraco": "IXHUATECO",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj4kat62sqzec4z40xr",
+      "createdAt": "2025-12-13T17:20:35.882Z",
+      "updatedAt": "2025-12-14T15:43:24.815Z"
+    },
+    {
+      "identifier": "269",
+      "name": "La bonita",
+      "speciesId": "porcino",
+      "birthDate": "2025-05-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "Landrace",
+        "peso_(kg)": "80",
+        "número_de_camada": "",
+        "arete": "269",
+        "fecha_de_inseminación": "2025-12-13",
+        "verraco": "m6 Landrace",
+        "granja_del_verraco": "Cardona"
+      },
+      "id": "mj4m9xjxwvb49squ2z",
+      "createdAt": "2025-12-13T18:15:54.141Z"
+    },
+    {
+      "identifier": "068",
+      "name": "La 68",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "068",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5we7a8uefmpx8yz7e",
+      "createdAt": "2025-12-14T15:46:55.712Z"
+    },
+    {
+      "identifier": "057",
+      "name": "La 57",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "057",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wettjghq9osa7ivb",
+      "createdAt": "2025-12-14T15:47:24.919Z"
+    },
+    {
+      "identifier": "052",
+      "name": "La 52",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "052",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wf8iu9m28txgw796",
+      "createdAt": "2025-12-14T15:47:43.974Z"
+    },
+    {
+      "identifier": "040",
+      "name": "La 40",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "040",
+        "fecha_de_inseminación": "2025-11-06",
+        "verraco": "GP 689-12 YORK",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5wgn5l8a9ie270c",
+      "createdAt": "2025-12-14T15:48:49.593Z"
+    },
+    {
+      "identifier": "071",
+      "name": "La 71",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "071",
+        "fecha_de_inseminación": "2025-11-03",
+        "verraco": "GPV ORUZ",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5whj752z1uriik4li",
+      "createdAt": "2025-12-14T15:49:31.121Z"
+    },
+    {
+      "identifier": "075",
+      "name": "La 75",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "075",
+        "fecha_de_inseminación": "2025-11-05",
+        "verraco": "GPV GALEON",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5wi940ismxzr43dpg",
+      "createdAt": "2025-12-14T15:50:04.704Z"
+    },
+    {
+      "identifier": "027",
+      "name": "La 27",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Pietrain",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "027",
+        "fecha_de_inseminación": "2025-11-15",
+        "verraco": "La Piraña",
+        "granja_del_verraco": "El Gordo Santoyo"
+      },
+      "id": "mj5wjh0zx6w9plsx7ho",
+      "createdAt": "2025-12-14T15:51:01.619Z"
+    },
+    {
+      "identifier": "005",
+      "name": "La 5",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "005",
+        "fecha_de_inseminación": "2025-12-07",
+        "verraco": "P81",
+        "granja_del_verraco": "Cardona"
+      },
+      "id": "mj5wkgle8w4lenu6iyp",
+      "createdAt": "2025-12-14T15:51:47.714Z"
+    },
+    {
+      "identifier": "215",
+      "name": "La 215",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "80",
+        "número_de_camada": "",
+        "arete": "215",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wm9ijfps3yrcsofq",
+      "createdAt": "2025-12-14T15:53:11.851Z"
+    },
+    {
+      "identifier": "021",
+      "name": "La 21",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "021",
+        "fecha_de_inseminación": "2025-11-18",
+        "verraco": "CHESTER HEREFORD",
+        "granja_del_verraco": "Granja Lucia"
+      },
+      "id": "mj5wnacypv1piopbxmr",
+      "createdAt": "2025-12-14T15:53:59.602Z"
+    },
+    {
+      "identifier": "024",
+      "name": "La 24",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "90",
+        "número_de_camada": "",
+        "arete": "024",
+        "fecha_de_inseminación": "2025-11-23",
+        "verraco": "COCHILOCO",
+        "granja_del_verraco": "El Gordo Santoyo"
+      },
+      "id": "mj5wppj0zg7s06ka8lp",
+      "createdAt": "2025-12-14T15:55:52.573Z"
+    },
+    {
+      "identifier": "281",
+      "name": "La 281",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "80",
+        "número_de_camada": "",
+        "arete": "281",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wxhc16w35geqfh5o",
+      "createdAt": "2025-12-14T16:01:55.201Z"
+    },
+    {
+      "identifier": "287",
+      "name": "La 287",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "80",
+        "número_de_camada": "",
+        "arete": "287",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wxves3a5voyf9cvn",
+      "createdAt": "2025-12-14T16:02:13.444Z"
+    },
+    {
+      "identifier": "294",
+      "name": "La 294",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "80",
+        "número_de_camada": "",
+        "arete": "294",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5wy8p6nrk1i3vy3i",
+      "createdAt": "2025-12-14T16:02:30.666Z"
+    },
+    {
+      "identifier": "025",
+      "name": "La 025",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "025",
+        "fecha_de_inseminación": "2025-11-18",
+        "verraco": "MUFASA",
+        "granja_del_verraco": "Granja Lucia"
+      },
+      "id": "mj5wzhzjgo52llris3q",
+      "createdAt": "2025-12-14T16:03:29.359Z"
+    },
+    {
+      "identifier": "011",
+      "name": "La 11",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "011",
+        "fecha_de_inseminación": "2025-11-16",
+        "verraco": "BALAM DUROC",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5x0osphi49dzga13i",
+      "createdAt": "2025-12-14T16:04:24.841Z"
+    },
+    {
+      "identifier": "031",
+      "name": "La 31",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "031",
+        "fecha_de_inseminación": "2025-11-16",
+        "verraco": "DRAGO HIBRIDO TERMINAL",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5x1lvs3vqwaal807z",
+      "createdAt": "2025-12-14T16:05:07.720Z"
+    },
+    {
+      "identifier": "034",
+      "name": "La 34",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "034",
+        "fecha_de_inseminación": "2025-11-23",
+        "verraco": "HEREFORD VIKINGO",
+        "granja_del_verraco": "Granja Lucia"
+      },
+      "id": "mj5x2ndurfndsybthf",
+      "createdAt": "2025-12-14T16:05:56.322Z"
+    },
+    {
+      "identifier": "038",
+      "name": "La 38",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "038",
+        "fecha_de_inseminación": "2025-12-07",
+        "verraco": "PIC 410",
+        "granja_del_verraco": "Cardona"
+      },
+      "id": "mj5x3qhh04wsci42u69w",
+      "createdAt": "2025-12-14T16:06:46.997Z"
+    },
+    {
+      "identifier": "039",
+      "name": "La 39",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "039",
+        "fecha_de_inseminación": "2025-11-08",
+        "verraco": "CHESTER",
+        "granja_del_verraco": "GPV"
+      },
+      "id": "mj5x4ovd2ug6pzwmyho",
+      "createdAt": "2025-12-14T16:07:31.561Z"
+    },
+    {
+      "identifier": "044",
+      "name": "La 44",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "044",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5x5ducp7ajqwc3o9i",
+      "createdAt": "2025-12-14T16:08:03.924Z"
+    },
+    {
+      "identifier": "25460",
+      "name": "La 25460",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "25460",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5x61v3lzlnr3v8hzn",
+      "createdAt": "2025-12-14T16:08:35.055Z"
+    },
+    {
+      "identifier": "25499",
+      "name": "La 25499",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "Duroc",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "25499",
+        "fecha_de_inseminación": "2025-11-12",
+        "verraco": "CARPINTERO",
+        "granja_del_verraco": "El Gordo Santoyo"
+      },
+      "id": "mj5x785q7rd4rvn0uve",
+      "createdAt": "2025-12-14T16:09:29.870Z"
+    },
+    {
+      "identifier": "25459",
+      "name": "La 25459",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "Hampshire",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "25459",
+        "fecha_de_inseminación": "2025-11-29",
+        "verraco": "TORNADO HAMPSHIRE",
+        "granja_del_verraco": "El Gordo Santoyo"
+      },
+      "id": "mj5x85pbk7bndmblish",
+      "createdAt": "2025-12-14T16:10:13.343Z"
+    },
+    {
+      "identifier": "25488",
+      "name": "La 25488",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "100",
+        "número_de_camada": "",
+        "arete": "25488",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5x8uafibz1y50bjg",
+      "createdAt": "2025-12-14T16:10:45.207Z"
+    },
+    {
+      "identifier": "061",
+      "name": "La 61",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "115",
+        "número_de_camada": "",
+        "arete": "061",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5x9yx2n5clgorvhyf",
+      "createdAt": "2025-12-14T16:11:37.863Z"
+    },
+    {
+      "identifier": "063",
+      "name": "La 63",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "115",
+        "número_de_camada": "",
+        "arete": "063",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5xa96v87eg0oa1wbh",
+      "createdAt": "2025-12-14T16:11:51.175Z"
+    },
+    {
+      "identifier": "074",
+      "name": "La 74",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "115",
+        "número_de_camada": "",
+        "arete": "074",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5xais3pdd2islep5a",
+      "createdAt": "2025-12-14T16:12:03.603Z"
+    },
+    {
+      "identifier": "068",
+      "name": "La 68",
+      "speciesId": "porcino",
+      "birthDate": "2025-03-01",
+      "sex": "female",
+      "status": "active",
+      "notes": "",
+      "customAttributes": {
+        "raza": "F1 York-Landrace",
+        "peso_(kg)": "115",
+        "número_de_camada": "",
+        "arete": "068",
+        "fecha_de_inseminación": "",
+        "verraco": "",
+        "granja_del_verraco": ""
+      },
+      "id": "mj5xat2jmgrhemtb0bf",
+      "createdAt": "2025-12-14T16:12:16.939Z"
+    }
+  ],
+  "vaccinations": [
+    {
+      "animalId": "mj5x9yx2n5clgorvhyf",
+      "vaccineName": "Pulmonia",
+      "applicationDate": "2025-12-13",
+      "nextDoseDate": "",
+      "veterinarian": "Otero",
+      "batch": "",
+      "notes": "",
+      "id": "mj5xf74jfcajcuwjnsv",
+      "createdAt": "2025-12-14T16:15:41.779Z"
+    }
+  ],
+  "feeding": [
+    {
+      "animalId": "mj4kat62sqzec4z40xr",
+      "foodType": "gestación",
+      "quantity": "2",
+      "unit": "kg",
+      "date": "2025-12-13",
+      "notes": "",
+      "id": "mj4kbof8ly8kho8ees9",
+      "createdAt": "2025-12-13T17:21:16.388Z"
+    }
+  ],
+  "reproduction": [
+    {
+      "type": "insemination",
+      "animalId": "mj4m9xjxwvb49squ2z",
+      "date": "2025-12-13",
+      "method": "artificial",
+      "sireCode": "m6 landrace",
+      "result": "pending",
+      "technician": "Arturo Arriaga",
+      "notes": "inseminación de la Landrace Pura",
+      "id": "mj4mat6bz4byjbfo11n",
+      "createdAt": "2025-12-13T18:16:35.123Z",
+      "updatedAt": "2025-12-13T18:17:07.788Z"
+    },
+    {
+      "type": "heat",
+      "animalId": "mj4m9xjxwvb49squ2z",
+      "date": "2025-12-13",
+      "intensity": "medium",
+      "notes": "",
+      "id": "mj4mc1xziike1yhse6a",
+      "createdAt": "2025-12-13T18:17:33.143Z"
+    }
+  ],
+  "exportedAt": "2025-12-14T16:15:47.665Z"
+}

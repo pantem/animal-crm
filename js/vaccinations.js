@@ -30,26 +30,28 @@ const VaccinationsManager = {
         }
     },
 
-    render() {
-        this.updateAnimalFilter();
-        this.renderTable();
-        this.renderCalendar();
+    async render() {
+        await this.updateAnimalFilter();
+        await this.renderTable();
+        await this.renderCalendar();
     },
 
-    updateAnimalFilter() {
+    async updateAnimalFilter() {
         const select = document.getElementById('vaccinationAnimalFilter');
         if (!select) return;
 
         const current = select.value;
-        select.innerHTML = '<option value="">Todos los animales</option>' + AnimalsManager.getSelectOptions();
+        const options = await AnimalsManager.getSelectOptions();
+        select.innerHTML = '<option value="">Todos los animales</option>' + options;
         select.value = current;
     },
 
-    renderTable() {
+    async renderTable() {
         const tbody = document.getElementById('vaccinationsTableBody');
         if (!tbody) return;
 
-        let vaccinations = DataManager.getAll(DB_KEYS.VACCINATIONS);
+        let vaccinations = await DataManager.getAll(DB_KEYS.VACCINATIONS);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
         const search = document.getElementById('vaccinationSearch')?.value.toLowerCase() || '';
         const animalFilter = document.getElementById('vaccinationAnimalFilter')?.value || '';
 
@@ -78,7 +80,7 @@ const VaccinationsManager = {
             return;
         }
 
-        tbody.innerHTML = vaccinations.map(v => this.renderRow(v)).join('');
+        tbody.innerHTML = vaccinations.map(v => this.renderRow(v, animals)).join('');
 
         tbody.querySelectorAll('.edit-vaccination').forEach(btn => {
             btn.addEventListener('click', () => this.showForm(btn.dataset.id));
@@ -88,8 +90,8 @@ const VaccinationsManager = {
         });
     },
 
-    renderRow(vaccination) {
-        const animal = DataManager.getById(DB_KEYS.ANIMALS, vaccination.animalId);
+    renderRow(vaccination, animals = []) {
+        const animal = animals.find(a => a._id === vaccination.animalId || a.id === vaccination.animalId);
         const isPending = vaccination.nextDoseDate && new Date(vaccination.nextDoseDate) > new Date();
         const isOverdue = vaccination.nextDoseDate && new Date(vaccination.nextDoseDate) < new Date();
 
@@ -108,17 +110,18 @@ const VaccinationsManager = {
                 <td>${vaccination.veterinarian || '-'}</td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-icon edit-vaccination" data-id="${vaccination.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-vaccination" data-id="${vaccination.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon edit-vaccination" data-id="${vaccination._id || vaccination.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-vaccination" data-id="${vaccination._id || vaccination.id}" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
         `;
     },
 
-    showForm(id = null) {
-        const vaccination = id ? DataManager.getById(DB_KEYS.VACCINATIONS, id) : null;
+    async showForm(id = null) {
+        const vaccination = id ? await DataManager.getById(DB_KEYS.VACCINATIONS, id) : null;
         const isEdit = !!vaccination;
+        const animalOptions = await AnimalsManager.getSelectOptions();
 
         Modal.show({
             title: isEdit ? 'Editar Vacunación' : 'Nueva Vacunación',
@@ -128,7 +131,7 @@ const VaccinationsManager = {
                         <label class="form-label">Animal *</label>
                         <select class="form-select" name="animalId" required>
                             <option value="">Seleccionar...</option>
-                            ${AnimalsManager.getSelectOptions()}
+                            ${animalOptions}
                         </select>
                     </div>
                     <div class="form-group">
@@ -138,11 +141,11 @@ const VaccinationsManager = {
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Fecha de Aplicación *</label>
-                            <input type="date" class="form-input" name="applicationDate" value="${vaccination?.applicationDate || new Date().toISOString().split('T')[0]}" required>
+                            <input type="date" class="form-input" name="applicationDate" value="${vaccination?.applicationDate ? vaccination.applicationDate.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Próxima Dosis</label>
-                            <input type="date" class="form-input" name="nextDoseDate" value="${vaccination?.nextDoseDate || ''}">
+                            <input type="date" class="form-input" name="nextDoseDate" value="${vaccination?.nextDoseDate ? vaccination.nextDoseDate.split('T')[0] : ''}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -159,7 +162,7 @@ const VaccinationsManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('vaccinationForm');
                 const formData = new FormData(form);
 
@@ -178,17 +181,22 @@ const VaccinationsManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.VACCINATIONS, id, data);
-                    Toast.show('Vacunación actualizada correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.VACCINATIONS, data);
-                    Toast.show('Vacunación registrada correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.VACCINATIONS, id, data);
+                        Toast.show('Vacunación actualizada correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.VACCINATIONS, data);
+                        Toast.show('Vacunación registrada correctamente', 'success');
+                    }
 
-                this.render();
-                App.updateDashboard();
-                return true;
+                    await this.render();
+                    await App.updateDashboard();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
@@ -201,12 +209,16 @@ const VaccinationsManager = {
         }
     },
 
-    delete(id) {
+    async delete(id) {
         if (confirm('¿Está seguro de eliminar este registro de vacunación?')) {
-            DataManager.delete(DB_KEYS.VACCINATIONS, id);
-            Toast.show('Registro eliminado correctamente', 'success');
-            this.render();
-            App.updateDashboard();
+            try {
+                await DataManager.delete(DB_KEYS.VACCINATIONS, id);
+                Toast.show('Registro eliminado correctamente', 'success');
+                await this.render();
+                await App.updateDashboard();
+            } catch (error) {
+                Toast.show(error.message, 'error');
+            }
         }
     },
 
@@ -215,7 +227,7 @@ const VaccinationsManager = {
         this.renderCalendar();
     },
 
-    renderCalendar() {
+    async renderCalendar() {
         const calendar = document.getElementById('vaccinationCalendar');
         const monthLabel = document.getElementById('currentMonth');
         if (!calendar || !monthLabel) return;
@@ -231,7 +243,8 @@ const VaccinationsManager = {
         const daysInMonth = lastDay.getDate();
 
         // Get vaccinations for this month
-        const vaccinations = DataManager.getAll(DB_KEYS.VACCINATIONS).filter(v => {
+        const allVaccinations = await DataManager.getAll(DB_KEYS.VACCINATIONS);
+        const vaccinations = allVaccinations.filter(v => {
             if (v.nextDoseDate) {
                 const date = new Date(v.nextDoseDate);
                 return date.getMonth() === month && date.getFullYear() === year;
@@ -255,7 +268,7 @@ const VaccinationsManager = {
             const dateStr = date.toISOString().split('T')[0];
             const isToday = date.toDateString() === today.toDateString();
 
-            const dayVaccinations = vaccinations.filter(v => v.nextDoseDate === dateStr);
+            const dayVaccinations = vaccinations.filter(v => v.nextDoseDate && v.nextDoseDate.split('T')[0] === dateStr);
 
             html += `
                 <div class="calendar-day ${isToday ? 'today' : ''}">
@@ -272,19 +285,8 @@ const VaccinationsManager = {
         calendar.innerHTML = html;
     },
 
-    getPendingVaccinations() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 7);
-
-        return DataManager.getAll(DB_KEYS.VACCINATIONS).filter(v => {
-            if (!v.nextDoseDate) return false;
-            const nextDate = new Date(v.nextDoseDate);
-            return nextDate >= today && nextDate <= nextWeek;
-        }).map(v => {
-            const animal = DataManager.getById(DB_KEYS.ANIMALS, v.animalId);
-            return { ...v, animal };
-        });
+    async getPendingVaccinations() {
+        const result = await DataManager.getPendingVaccinations(7);
+        return result.success ? result.data : [];
     }
 };

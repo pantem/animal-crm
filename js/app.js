@@ -73,7 +73,7 @@ const App = {
         this.navigateTo(hash);
     },
 
-    navigateTo(page) {
+    async navigateTo(page) {
         this.currentPage = page;
         window.location.hash = page;
 
@@ -83,41 +83,41 @@ const App = {
         });
 
         // Render page content
-        this.renderPage(page);
+        await this.renderPage(page);
     },
 
-    renderPage(page) {
+    async renderPage(page) {
         const mainContent = document.getElementById('mainContent');
 
         switch (page) {
             case 'dashboard':
                 mainContent.innerHTML = this.getDashboardHTML();
-                this.updateDashboard();
+                await this.updateDashboard();
                 break;
             case 'species':
                 mainContent.innerHTML = this.getSpeciesHTML();
                 SpeciesManager.bindEvents();
-                SpeciesManager.render();
+                await SpeciesManager.render();
                 break;
             case 'animals':
                 mainContent.innerHTML = this.getAnimalsHTML();
                 AnimalsManager.bindEvents();
-                AnimalsManager.render();
+                await AnimalsManager.render();
                 break;
             case 'vaccinations':
                 mainContent.innerHTML = this.getVaccinationsHTML();
                 VaccinationsManager.bindEvents();
-                VaccinationsManager.render();
+                await VaccinationsManager.render();
                 break;
             case 'feeding':
                 mainContent.innerHTML = this.getFeedingHTML();
                 FeedingManager.bindEvents();
-                FeedingManager.render();
+                await FeedingManager.render();
                 break;
             case 'reproduction':
                 mainContent.innerHTML = this.getReproductionHTML();
                 ReproductionManager.bindEvents();
-                ReproductionManager.render();
+                await ReproductionManager.render();
                 break;
             case 'settings':
                 mainContent.innerHTML = this.getSettingsHTML();
@@ -252,19 +252,19 @@ const App = {
                     <button class="btn btn-primary" id="addVaccinationBtn">➕ Nueva Vacunación</button>
                 </header>
                 <div class="tabs">
-                    <button class="tab active" data-tab="vaccinations-list">Historial</button>
+                    <button class="tab active" data-tab="vaccinations-list">Listado</button>
                     <button class="tab" data-tab="vaccinations-calendar">Calendario</button>
                 </div>
                 <div class="tab-content active" id="vaccinations-list">
                     <div class="filters-bar">
                         <div class="search-box">
                             <span>🔍</span>
-                            <input type="text" id="vaccinationSearch" placeholder="Buscar vacunación...">
+                            <input type="text" id="vaccinationSearch" placeholder="Buscar por vacuna o veterinario...">
                         </div>
                         <select id="vaccinationAnimalFilter" class="filter-select"><option value="">Todos los animales</option></select>
                     </div>
                     <div class="table-container">
-                        <table class="data-table" id="vaccinationsTable">
+                        <table class="data-table">
                             <thead>
                                 <tr><th>Animal</th><th>Vacuna</th><th>Fecha Aplicación</th><th>Próxima Dosis</th><th>Veterinario</th><th>Acciones</th></tr>
                             </thead>
@@ -276,11 +276,8 @@ const App = {
                     <div class="calendar-container">
                         <div class="calendar-header">
                             <button class="btn btn-icon" id="prevMonth">◀</button>
-                            <h3 id="currentMonth">Diciembre 2025</h3>
+                            <h3 id="currentMonth">Diciembre 2023</h3>
                             <button class="btn btn-icon" id="nextMonth">▶</button>
-                        </div>
-                        <div class="calendar-legend">
-                            <span class="legend-item"><span class="legend-dot vaccination"></span> Vacunación Programada</span>
                         </div>
                         <div class="calendar-grid" id="vaccinationCalendar"></div>
                     </div>
@@ -294,29 +291,45 @@ const App = {
             <section class="page active" id="feedingPage">
                 <header class="page-header">
                     <div>
-                        <h1>Control de Alimentación</h1>
-                        <p class="page-subtitle">Registro de consumo de alimento</p>
+                        <h1>Registro de Alimentación</h1>
+                        <p class="page-subtitle">Control de consumo y costos de alimentación</p>
                     </div>
                     <button class="btn btn-primary" id="addFeedingBtn">➕ Nuevo Registro</button>
                 </header>
-                <div class="stats-grid stats-small">
-                    <div class="stat-card mini"><span class="stat-value" id="todayFeeding">0 kg</span><span class="stat-label">Consumo Hoy</span></div>
-                    <div class="stat-card mini"><span class="stat-value" id="weekFeeding">0 kg</span><span class="stat-label">Esta Semana</span></div>
-                    <div class="stat-card mini"><span class="stat-value" id="monthFeeding">0 kg</span><span class="stat-label">Este Mes</span></div>
+                
+                <div class="stats-grid mobile-scroll">
+                    <div class="stat-card compact">
+                        <div class="stat-label">Hoy</div>
+                        <div class="stat-value" id="todayFeeding">0 kg</div>
+                    </div>
+                    <div class="stat-card compact">
+                        <div class="stat-label">Esta Semana</div>
+                        <div class="stat-value" id="weekFeeding">0 kg</div>
+                    </div>
+                    <div class="stat-card compact">
+                        <div class="stat-label">Este Mes</div>
+                        <div class="stat-value" id="monthFeeding">0 kg</div>
+                    </div>
                 </div>
-                <div class="card chart-card full-width">
-                    <h3 class="card-title">Consumo por Día</h3>
-                    <div class="chart-container large"><canvas id="feedingDetailChart"></canvas></div>
+
+                <div class="dashboard-grid" style="margin-bottom: 2rem;">
+                    <div class="card chart-card full-width">
+                        <h3 class="card-title">Consumo Diario (Últimos 14 días)</h3>
+                        <div class="chart-container"><canvas id="feedingDetailChart"></canvas></div>
+                    </div>
                 </div>
+
                 <div class="filters-bar">
                     <select id="feedingAnimalFilter" class="filter-select"><option value="">Todos los animales</option></select>
-                    <input type="date" id="feedingDateFrom" class="filter-input">
-                    <input type="date" id="feedingDateTo" class="filter-input">
+                    <input type="date" id="feedingDateFrom" class="form-input" style="width: auto;">
+                    <span style="color: var(--text-muted)">a</span>
+                    <input type="date" id="feedingDateTo" class="form-input" style="width: auto;">
                 </div>
+
                 <div class="table-container">
-                    <table class="data-table" id="feedingTable">
+                    <table class="data-table">
                         <thead>
-                            <tr><th>Animal</th><th>Tipo de Alimento</th><th>Cantidad</th><th>Fecha</th><th>Notas</th><th>Acciones</th></tr>
+                            <tr><th>Animal</th><th>Alimento</th><th>Cantidad</th><th>Fecha</th><th>Notas</th><th>Acciones</th></tr>
                         </thead>
                         <tbody id="feedingTableBody"></tbody>
                     </table>
@@ -330,52 +343,56 @@ const App = {
             <section class="page active" id="reproductionPage">
                 <header class="page-header">
                     <div>
-                        <h1>Ciclo Reproductivo</h1>
-                        <p class="page-subtitle">Control de celo e inseminación</p>
+                        <h1>Reproducción y Genética</h1>
+                        <p class="page-subtitle">Control de ciclos, inseminaciones y partos</p>
                     </div>
-                    <div class="btn-group">
-                        <button class="btn btn-primary" id="addHeatBtn">❤️ Registrar Celo</button>
-                        <button class="btn btn-secondary" id="addInseminationBtn">🧬 Registrar Inseminación</button>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="addHeatBtn">🔥 Celo</button>
+                        <button class="btn btn-primary" id="addInseminationBtn">🧬 Inseminación</button>
                     </div>
                 </header>
+
                 <div class="tabs">
-                    <button class="tab active" data-tab="heat-records">Registros de Celo</button>
-                    <button class="tab" data-tab="insemination-records">Inseminaciones</button>
+                    <button class="tab active" data-tab="heat-registry">Celos</button>
+                    <button class="tab" data-tab="insemination-registry">Inseminaciones</button>
                     <button class="tab" data-tab="reproduction-calendar">Calendario</button>
                 </div>
-                <div class="tab-content active" id="heat-records">
+
+                <div class="tab-content active" id="heat-registry">
                     <div class="table-container">
-                        <table class="data-table" id="heatTable">
+                        <table class="data-table">
                             <thead>
-                                <tr><th>Animal</th><th>Fecha de Celo</th><th>Próximo Celo Estimado</th><th>Fecha Probable de Parto</th><th>Intensidad</th><th>Notas</th><th>Acciones</th></tr>
+                                <tr><th>Animal</th><th>Fecha Celo</th><th>Próximo Celo (Est.)</th><th>Fecha Parto (Est.)</th><th>Intensidad</th><th>Notas</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="heatTableBody"></tbody>
                         </table>
                     </div>
                 </div>
-                <div class="tab-content" id="insemination-records">
+
+                <div class="tab-content" id="insemination-registry">
                     <div class="table-container">
-                        <table class="data-table" id="inseminationTable">
+                        <table class="data-table">
                             <thead>
-                                <tr><th>Animal</th><th>Fecha</th><th>Método</th><th>Semental/Código</th><th>Fecha Probable de Parto</th><th>Resultado</th><th>Acciones</th></tr>
+                                <tr><th>Animal</th><th>Fecha</th><th>Método</th><th>Semental</th><th>Fecha Parto (Est.)</th><th>Resultado</th><th>Acciones</th></tr>
                             </thead>
                             <tbody id="inseminationTableBody"></tbody>
                         </table>
                     </div>
                 </div>
+
                 <div class="tab-content" id="reproduction-calendar">
                     <div class="calendar-container">
                         <div class="calendar-header">
                             <button class="btn btn-icon" id="prevReproMonth">◀</button>
-                            <h3 id="currentReproMonth">Diciembre 2025</h3>
+                            <h3 id="currentReproMonth">Diciembre 2023</h3>
                             <button class="btn btn-icon" id="nextReproMonth">▶</button>
                         </div>
-                        <div class="calendar-legend">
-                            <span class="legend-item"><span class="legend-dot heat"></span> Celo</span>
-                            <span class="legend-item"><span class="legend-dot insemination"></span> Inseminación</span>
-                            <span class="legend-item"><span class="legend-dot predicted"></span> Celo Estimado</span>
-                        </div>
                         <div class="calendar-grid" id="reproductionCalendar"></div>
+                        <div class="calendar-legend">
+                            <div class="legend-item"><span class="dot heat"></span> Celo</div>
+                            <div class="legend-item"><span class="dot insemination"></span> Inseminación</div>
+                            <div class="legend-item"><span class="dot birth"></span> Parto (Est.)</div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -387,24 +404,36 @@ const App = {
             <section class="page active" id="settingsPage">
                 <header class="page-header">
                     <h1>Configuración</h1>
-                    <p class="page-subtitle">Administra tus datos y preferencias</p>
                 </header>
-                <div class="settings-grid">
-                    <div class="card settings-card">
-                        <h3 class="card-title">📥 Exportar Datos</h3>
-                        <p class="card-description">Descarga todos tus datos en formato JSON para respaldo.</p>
-                        <button class="btn btn-primary" id="exportDataBtn">Exportar JSON</button>
+                
+                <div class="card" style="max-width: 600px; margin: 0 auto;">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Tema de la Aplicación</h3>
+                            <p>Cambia entre modo claro y oscuro</p>
+                        </div>
+                        <button class="btn btn-secondary" id="themeToggle">
+                            <i id="themeIcon" class="fas fa-moon"></i>
+                            <span id="themeText">Tema Oscuro</span>
+                        </button>
                     </div>
-                    <div class="card settings-card">
-                        <h3 class="card-title">📤 Importar Datos</h3>
-                        <p class="card-description">Restaura tus datos desde un archivo JSON de respaldo.</p>
-                        <input type="file" id="importFileInput" accept=".json" style="display: none;">
-                        <button class="btn btn-secondary" id="importDataBtn">Importar JSON</button>
-                    </div>
-                    <div class="card settings-card danger">
-                        <h3 class="card-title">⚠️ Eliminar Todos los Datos</h3>
-                        <p class="card-description">Esta acción eliminará permanentemente todos los datos.</p>
-                        <button class="btn btn-danger" id="clearDataBtn">Eliminar Todo</button>
+
+                    <div class="divider"></div>
+
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <h3>Gestión de Datos</h3>
+                            <p>Importar o eliminar datos del sistema</p>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-direction: column;">
+                            <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                            <button class="btn btn-secondary" onclick="document.getElementById('importFileInput').click()">
+                                📤 Importar Respaldo
+                            </button>
+                            <button class="btn btn-danger" id="clearDataBtn">
+                                🗑️ Eliminar Todos los Datos
+                            </button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -412,34 +441,23 @@ const App = {
     },
 
     bindSettings() {
-        document.getElementById('exportDataBtn')?.addEventListener('click', () => {
-            const data = DataManager.exportAll();
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `animal-crm-backup-${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            Toast.show('Datos exportados correctamente', 'success');
-        });
+        const theme = localStorage.getItem('animalcrm_theme') || 'dark';
+        this.updateThemeToggleUI(theme);
 
-        document.getElementById('importDataBtn')?.addEventListener('click', () => {
-            document.getElementById('importFileInput')?.click();
-        });
+        document.getElementById('themeToggle')?.addEventListener('click', () => this.toggleTheme());
 
         document.getElementById('importFileInput')?.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const data = JSON.parse(event.target.result);
-                    if (confirm('¿Está seguro de importar estos datos? Los datos actuales serán reemplazados.')) {
-                        DataManager.importAll(data);
+                    if (confirm('¿Está seguro de importar estos datos? Se agregarán a la base de datos existente.')) {
+                        await DataManager.importAll(data);
                         Toast.show('Datos importados correctamente', 'success');
-                        this.renderPage(this.currentPage);
+                        this.navigateTo(this.currentPage);
                     }
                 } catch (err) {
                     Toast.show('Error al leer el archivo JSON', 'error');
@@ -449,77 +467,76 @@ const App = {
         });
 
         document.getElementById('clearDataBtn')?.addEventListener('click', () => {
-            if (confirm('⚠️ ¿Está seguro de eliminar TODOS los datos? Esta acción no se puede deshacer.')) {
-                if (confirm('Esta es su última oportunidad. ¿Confirma la eliminación de todos los datos?')) {
-                    DataManager.clearAll();
-                    DataManager.initializeSampleData();
-                    Toast.show('Todos los datos han sido eliminados', 'success');
-                    this.renderPage(this.currentPage);
-                }
+            if (confirm('⚠️ ¿Está seguro de eliminar TODOS los datos? Esta acción eliminaría todo de la base de datos.')) {
+                alert('Esta función está deshabilitada por seguridad en la versión conectada a base de datos.');
             }
         });
     },
 
-    updateDashboard() {
+    async updateDashboard() {
         // Stats
-        const animals = DataManager.getAll(DB_KEYS.ANIMALS);
-        const species = DataManager.getAll(DB_KEYS.SPECIES);
-        const pendingVax = VaccinationsManager.getPendingVaccinations();
-        const upcomingHeats = ReproductionManager.getUpcomingEvents();
+        try {
+            const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+            const species = await DataManager.getAll(DB_KEYS.SPECIES);
+            const pendingVax = await DataManager.getPendingVaccinations();
+            const upcomingHeats = await DataManager.getUpcomingHeats();
 
-        document.getElementById('totalAnimals').textContent = animals.filter(a => a.status === 'active').length;
-        document.getElementById('totalSpecies').textContent = species.length;
-        document.getElementById('pendingVaccinations').textContent = pendingVax.length;
-        document.getElementById('upcomingHeat').textContent = upcomingHeats.length;
+            document.getElementById('totalAnimals').textContent = animals.filter(a => a.status === 'active').length;
+            document.getElementById('totalSpecies').textContent = species.length;
+            document.getElementById('pendingVaccinations').textContent = pendingVax.length;
+            document.getElementById('upcomingHeat').textContent = upcomingHeats.length;
 
-        // Upcoming vaccinations list
-        const vaxList = document.getElementById('upcomingVaccinationsList');
-        if (vaxList) {
-            if (pendingVax.length === 0) {
-                vaxList.innerHTML = '<li class="empty-state">No hay vacunaciones pendientes</li>';
-            } else {
-                vaxList.innerHTML = pendingVax.slice(0, 5).map(v => `
-                    <li>
-                        <span>${v.animal?.name || 'N/A'} - ${v.vaccineName}</span>
-                        <span class="status-badge pending">${new Date(v.nextDoseDate).toLocaleDateString('es-ES')}</span>
-                    </li>
-                `).join('');
+            // Upcoming vaccinations list
+            const vaxList = document.getElementById('upcomingVaccinationsList');
+            if (vaxList) {
+                if (pendingVax.length === 0) {
+                    vaxList.innerHTML = '<li class="empty-state">No hay vacunaciones pendientes</li>';
+                } else {
+                    vaxList.innerHTML = pendingVax.slice(0, 5).map(v => `
+                        <li>
+                            <span>${v.animal?.name || 'Animal'} - ${v.vaccineName}</span>
+                            <span class="status-badge pending">${new Date(v.nextDoseDate).toLocaleDateString('es-ES')}</span>
+                        </li>
+                    `).join('');
+                }
             }
-        }
 
-        // Upcoming reproduction events
-        const reproList = document.getElementById('reproductionEventsList');
-        if (reproList) {
-            if (upcomingHeats.length === 0) {
-                reproList.innerHTML = '<li class="empty-state">No hay eventos próximos</li>';
-            } else {
-                reproList.innerHTML = upcomingHeats.slice(0, 5).map(e => `
-                    <li>
-                        <span>${e.animal?.name || 'N/A'} - Celo estimado</span>
-                        <span class="status-badge pending">${e.predictedDate.toLocaleDateString('es-ES')}</span>
-                    </li>
-                `).join('');
+            // Upcoming reproduction events
+            const reproList = document.getElementById('reproductionEventsList');
+            if (reproList) {
+                if (upcomingHeats.length === 0) {
+                    reproList.innerHTML = '<li class="empty-state">No hay eventos próximos</li>';
+                } else {
+                    reproList.innerHTML = upcomingHeats.slice(0, 5).map(e => `
+                        <li>
+                            <span>${e.animal?.name || 'Animal'} - Celo estimado</span>
+                            <span class="status-badge pending">${new Date(e.predictedDate).toLocaleDateString('es-ES')}</span>
+                        </li>
+                    `).join('');
+                }
             }
-        }
 
-        // Charts
-        this.renderSpeciesChart();
-        this.renderFeedingChart();
+            // Charts
+            await this.renderSpeciesChart();
+            await this.renderFeedingChart();
+        } catch (error) {
+            console.error('Error updating dashboard:', error);
+        }
     },
 
-    renderSpeciesChart() {
+    async renderSpeciesChart() {
         const canvas = document.getElementById('speciesChart');
         if (!canvas) return;
 
-        const species = DataManager.getAll(DB_KEYS.SPECIES);
-        const animals = DataManager.getAll(DB_KEYS.ANIMALS);
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
 
         const labels = [];
         const data = [];
         const colors = ['#10B981', '#6366F1', '#F59E0B', '#EC4899', '#8B5CF6', '#14B8A6'];
 
         species.forEach((s, i) => {
-            const count = animals.filter(a => a.speciesId === s.id && a.status === 'active').length;
+            const count = animals.filter(a => (a.speciesId === s._id || a.speciesId === s.id) && a.status === 'active').length;
             if (count > 0) {
                 labels.push(s.name);
                 data.push(count);
@@ -558,11 +575,13 @@ const App = {
         });
     },
 
-    renderFeedingChart() {
+    async renderFeedingChart() {
         const canvas = document.getElementById('feedingChart');
         if (!canvas) return;
 
-        const feedings = DataManager.getAll(DB_KEYS.FEEDING);
+        const result = await DataManager.getDailyFeeding(7);
+        const dailyData = result.success ? result.data : [];
+
         const days = [];
         const data = [];
 
@@ -573,10 +592,8 @@ const App = {
 
             days.push(date.toLocaleDateString('es-ES', { weekday: 'short' }));
 
-            const total = feedings
-                .filter(f => f.date === dateStr)
-                .reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0);
-            data.push(total);
+            const dayData = dailyData.find(d => d._id === dateStr);
+            data.push(dayData ? dayData.total : 0);
         }
 
         if (this.feedingChart) {
@@ -631,7 +648,9 @@ const Modal = {
         const cancelBtn = document.getElementById('modalCancel');
         const confirmBtn = document.getElementById('modalConfirm');
 
+        // Reset display
         cancelBtn.style.display = showCancel ? 'inline-flex' : 'none';
+        confirmBtn.style.display = 'inline-flex';
         confirmBtn.textContent = confirmText;
 
         overlay.classList.add('active');
@@ -642,9 +661,10 @@ const Modal = {
         cancelBtn.onclick = close;
         overlay.onclick = (e) => { if (e.target === overlay) close(); };
 
-        confirmBtn.onclick = () => {
+        confirmBtn.onclick = async () => {
             if (onConfirm) {
-                const result = onConfirm();
+                // Determine if onConfirm is async
+                const result = await onConfirm();
                 if (result !== false) close();
             } else {
                 close();

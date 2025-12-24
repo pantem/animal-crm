@@ -8,8 +8,8 @@ const SpeciesManager = {
         document.getElementById('addSpeciesBtn')?.addEventListener('click', () => this.showForm());
     },
 
-    render() {
-        const species = DataManager.getAll(DB_KEYS.SPECIES);
+    async render() {
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
         const grid = document.getElementById('speciesGrid');
         if (!grid) return;
 
@@ -24,7 +24,8 @@ const SpeciesManager = {
             return;
         }
 
-        grid.innerHTML = species.map(s => this.renderCard(s)).join('');
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+        grid.innerHTML = species.map(s => this.renderCard(s, animals)).join('');
 
         // Bind edit/delete buttons
         grid.querySelectorAll('.edit-species').forEach(btn => {
@@ -38,26 +39,26 @@ const SpeciesManager = {
         });
     },
 
-    renderCard(species) {
-        const animals = DataManager.getAll(DB_KEYS.ANIMALS).filter(a => a.speciesId === species.id);
+    renderCard(species, animals = []) {
+        const speciesAnimals = animals.filter(a => a.speciesId === species._id || a.speciesId === species.id);
         const attrs = species.attributes || [];
 
         return `
-            <div class="species-card" id="species-${species.id}">
+            <div class="species-card" id="species-${species._id || species.id}">
                 <div class="species-header">
                     <div>
                         <div class="species-icon">${species.icon || '🐾'}</div>
                         <div class="species-name">${species.name}</div>
                     </div>
                     <div class="action-btns">
-                        <button class="btn btn-icon edit-species" data-id="${species.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-species" data-id="${species.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon edit-species" data-id="${species._id || species.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-species" data-id="${species._id || species.id}" title="Eliminar">🗑️</button>
                     </div>
                 </div>
                 <div class="species-description">${species.description || 'Sin descripción'}</div>
                 <div class="species-stats">
                     <div class="species-stat">
-                        <span class="species-stat-value">${animals.length}</span>
+                        <span class="species-stat-value">${speciesAnimals.length}</span>
                         <span class="species-stat-label">Animales</span>
                     </div>
                     <div class="species-stat">
@@ -72,7 +73,7 @@ const SpeciesManager = {
                     </div>
                 ` : ''}
                 <div style="margin-top: 1rem;">
-                    <button class="btn btn-secondary manage-attributes" data-id="${species.id}">
+                    <button class="btn btn-secondary manage-attributes" data-id="${species._id || species.id}">
                         Gestionar Atributos
                     </button>
                 </div>
@@ -80,8 +81,8 @@ const SpeciesManager = {
         `;
     },
 
-    showForm(id = null) {
-        const species = id ? DataManager.getById(DB_KEYS.SPECIES, id) : null;
+    async showForm(id = null) {
+        const species = id ? await DataManager.getById(DB_KEYS.SPECIES, id) : null;
         const isEdit = !!species;
 
         Modal.show({
@@ -102,7 +103,7 @@ const SpeciesManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('speciesForm');
                 const formData = new FormData(form);
                 const data = {
@@ -117,23 +118,27 @@ const SpeciesManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.SPECIES, id, data);
-                    Toast.show('Especie actualizada correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.SPECIES, data);
-                    Toast.show('Especie creada correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.SPECIES, id, data);
+                        Toast.show('Especie actualizada correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.SPECIES, data);
+                        Toast.show('Especie creada correctamente', 'success');
+                    }
 
-                this.render();
-                AnimalsManager.updateSpeciesFilter();
-                return true;
+                    await this.render();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
     },
 
-    showAttributesForm(speciesId) {
-        const species = DataManager.getById(DB_KEYS.SPECIES, speciesId);
+    async showAttributesForm(speciesId) {
+        const species = await DataManager.getById(DB_KEYS.SPECIES, speciesId);
         if (!species) return;
 
         const attrs = species.attributes || [];
@@ -149,7 +154,7 @@ const SpeciesManager = {
                     + Agregar Atributo
                 </button>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const rows = document.querySelectorAll('.attribute-row');
                 const newAttrs = [];
 
@@ -170,10 +175,15 @@ const SpeciesManager = {
                     }
                 });
 
-                DataManager.update(DB_KEYS.SPECIES, speciesId, { attributes: newAttrs });
-                Toast.show('Atributos actualizados correctamente', 'success');
-                this.render();
-                return true;
+                try {
+                    await DataManager.update(DB_KEYS.SPECIES, speciesId, { attributes: newAttrs });
+                    Toast.show('Atributos actualizados correctamente', 'success');
+                    await this.render();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
@@ -245,25 +255,30 @@ const SpeciesManager = {
         });
     },
 
-    delete(id) {
-        const animals = DataManager.getAll(DB_KEYS.ANIMALS).filter(a => a.speciesId === id);
+    async delete(id) {
+        try {
+            const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+            const speciesAnimals = animals.filter(a => a.speciesId === id);
 
-        if (animals.length > 0) {
-            Toast.show(`No se puede eliminar: hay ${animals.length} animales de esta especie`, 'error');
-            return;
-        }
+            if (speciesAnimals.length > 0) {
+                Toast.show(`No se puede eliminar: hay ${speciesAnimals.length} animales de esta especie`, 'error');
+                return;
+            }
 
-        if (confirm('¿Está seguro de eliminar esta especie?')) {
-            DataManager.delete(DB_KEYS.SPECIES, id);
-            Toast.show('Especie eliminada correctamente', 'success');
-            this.render();
-            AnimalsManager.updateSpeciesFilter();
+            if (confirm('¿Está seguro de eliminar esta especie?')) {
+                await DataManager.delete(DB_KEYS.SPECIES, id);
+                Toast.show('Especie eliminada correctamente', 'success');
+                await this.render();
+            }
+        } catch (error) {
+            Toast.show(error.message, 'error');
         }
     },
 
-    getSelectOptions() {
-        return DataManager.getAll(DB_KEYS.SPECIES).map(s =>
-            `<option value="${s.id}">${s.icon} ${s.name}</option>`
+    async getSelectOptions() {
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
+        return species.map(s =>
+            `<option value="${s._id || s.id}">${s.icon} ${s.name}</option>`
         ).join('');
     }
 };

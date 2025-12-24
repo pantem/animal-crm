@@ -11,9 +11,10 @@ const AnimalsManager = {
         document.getElementById('statusFilter')?.addEventListener('change', () => this.filter());
     },
 
-    render() {
-        this.updateSpeciesFilter();
-        const animals = this.getFilteredAnimals();
+    async render() {
+        await this.updateSpeciesFilter();
+        const animals = await this.getFilteredAnimals();
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
         const tbody = document.getElementById('animalsTableBody');
         if (!tbody) return;
 
@@ -29,7 +30,7 @@ const AnimalsManager = {
             return;
         }
 
-        tbody.innerHTML = animals.map(a => this.renderRow(a)).join('');
+        tbody.innerHTML = animals.map(a => this.renderRow(a, species)).join('');
 
         tbody.querySelectorAll('.view-animal').forEach(btn => {
             btn.addEventListener('click', () => this.showDetails(btn.dataset.id));
@@ -42,8 +43,8 @@ const AnimalsManager = {
         });
     },
 
-    renderRow(animal) {
-        const species = DataManager.getById(DB_KEYS.SPECIES, animal.speciesId);
+    renderRow(animal, species = []) {
+        const animalSpecies = species.find(s => s._id === animal.speciesId || s.id === animal.speciesId);
         const statusClass = animal.status || 'active';
         const statusLabels = { active: 'Activo', sold: 'Vendido', deceased: 'Fallecido' };
         const imageHtml = animal.image
@@ -55,22 +56,22 @@ const AnimalsManager = {
                 <td>${imageHtml}</td>
                 <td><strong>${animal.identifier}</strong></td>
                 <td>${animal.name}</td>
-                <td>${species ? `${species.icon} ${species.name}` : 'N/A'}</td>
+                <td>${animalSpecies ? `${animalSpecies.icon} ${animalSpecies.name}` : 'N/A'}</td>
                 <td>${animal.birthDate ? new Date(animal.birthDate).toLocaleDateString('es-ES') : 'N/A'}</td>
                 <td><span class="status-badge ${statusClass}">${statusLabels[statusClass]}</span></td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-icon view-animal" data-id="${animal.id}" title="Ver detalles">👁️</button>
-                        <button class="btn btn-icon edit-animal" data-id="${animal.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-animal" data-id="${animal.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon view-animal" data-id="${animal._id || animal.id}" title="Ver detalles">👁️</button>
+                        <button class="btn btn-icon edit-animal" data-id="${animal._id || animal.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-animal" data-id="${animal._id || animal.id}" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
         `;
     },
 
-    getFilteredAnimals() {
-        let animals = DataManager.getAll(DB_KEYS.ANIMALS);
+    async getFilteredAnimals() {
+        let animals = await DataManager.getAll(DB_KEYS.ANIMALS);
         const search = document.getElementById('animalSearch')?.value.toLowerCase() || '';
         const speciesFilter = document.getElementById('speciesFilter')?.value || '';
         const statusFilter = document.getElementById('statusFilter')?.value || '';
@@ -91,23 +92,24 @@ const AnimalsManager = {
         return animals;
     },
 
-    filter() {
-        this.render();
+    async filter() {
+        await this.render();
     },
 
-    updateSpeciesFilter() {
+    async updateSpeciesFilter() {
         const select = document.getElementById('speciesFilter');
         if (!select) return;
 
         const current = select.value;
-        select.innerHTML = '<option value="">Todas las especies</option>' + SpeciesManager.getSelectOptions();
+        const options = await SpeciesManager.getSelectOptions();
+        select.innerHTML = '<option value="">Todas las especies</option>' + options;
         select.value = current;
     },
 
-    showForm(id = null) {
-        const animal = id ? DataManager.getById(DB_KEYS.ANIMALS, id) : null;
+    async showForm(id = null) {
+        const animal = id ? await DataManager.getById(DB_KEYS.ANIMALS, id) : null;
         const isEdit = !!animal;
-        const species = DataManager.getAll(DB_KEYS.SPECIES);
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
 
         Modal.show({
             title: isEdit ? 'Editar Animal' : 'Nuevo Animal',
@@ -128,12 +130,12 @@ const AnimalsManager = {
                             <label class="form-label">Especie *</label>
                             <select class="form-select" name="speciesId" id="animalSpeciesSelect" required>
                                 <option value="">Seleccionar...</option>
-                                ${species.map(s => `<option value="${s.id}" ${animal?.speciesId === s.id ? 'selected' : ''}>${s.icon} ${s.name}</option>`).join('')}
+                                ${species.map(s => `<option value="${s._id || s.id}" ${animal?.speciesId === (s._id || s.id) ? 'selected' : ''}>${s.icon} ${s.name}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Fecha de Nacimiento</label>
-                            <input type="date" class="form-input" name="birthDate" value="${animal?.birthDate || ''}">
+                            <input type="date" class="form-input" name="birthDate" value="${animal?.birthDate ? animal.birthDate.split('T')[0] : ''}">
                         </div>
                     </div>
                     <div class="form-row">
@@ -177,7 +179,7 @@ const AnimalsManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('animalForm');
                 const formData = new FormData(form);
 
@@ -208,29 +210,34 @@ const AnimalsManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.ANIMALS, id, data);
-                    Toast.show('Animal actualizado correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.ANIMALS, data);
-                    Toast.show('Animal registrado correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.ANIMALS, id, data);
+                        Toast.show('Animal actualizado correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.ANIMALS, data);
+                        Toast.show('Animal registrado correctamente', 'success');
+                    }
 
-                this.render();
-                App.updateDashboard();
-                return true;
+                    await this.render();
+                    await App.updateDashboard();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
         // Handle species change to load custom attributes
-        setTimeout(() => {
+        setTimeout(async () => {
             const speciesSelect = document.getElementById('animalSpeciesSelect');
-            speciesSelect?.addEventListener('change', () => {
-                this.loadCustomAttributes(speciesSelect.value, animal?.customAttributes);
+            speciesSelect?.addEventListener('change', async () => {
+                await this.loadCustomAttributes(speciesSelect.value, animal?.customAttributes);
             });
 
             if (animal?.speciesId) {
-                this.loadCustomAttributes(animal.speciesId, animal.customAttributes);
+                await this.loadCustomAttributes(animal.speciesId, animal.customAttributes);
             }
 
             // Handle image upload
@@ -261,11 +268,11 @@ const AnimalsManager = {
         }, 100);
     },
 
-    loadCustomAttributes(speciesId, existingValues = {}) {
+    async loadCustomAttributes(speciesId, existingValues = {}) {
         const container = document.getElementById('customAttributesContainer');
         if (!container) return;
 
-        const species = DataManager.getById(DB_KEYS.SPECIES, speciesId);
+        const species = await DataManager.getById(DB_KEYS.SPECIES, speciesId);
         if (!species || !species.attributes || species.attributes.length === 0) {
             container.innerHTML = '';
             return;
@@ -328,14 +335,15 @@ const AnimalsManager = {
         }
     },
 
-    showDetails(id) {
-        const animal = DataManager.getById(DB_KEYS.ANIMALS, id);
-        if (!animal) return;
+    async showDetails(id) {
+        const result = await DataManager.getById(DB_KEYS.ANIMALS, id);
+        if (!result) return;
 
-        const species = DataManager.getById(DB_KEYS.SPECIES, animal.speciesId);
-        const vaccinations = DataManager.getAll(DB_KEYS.VACCINATIONS).filter(v => v.animalId === id);
-        const feedings = DataManager.getAll(DB_KEYS.FEEDING).filter(f => f.animalId === id).slice(-5);
-        const reproductions = DataManager.getAll(DB_KEYS.REPRODUCTION).filter(r => r.animalId === id).slice(-5);
+        const animal = result.animal || result;
+        const species = await DataManager.getById(DB_KEYS.SPECIES, animal.speciesId);
+        const vaccinations = result.vaccinations || [];
+        const feedings = result.feedings || [];
+        const reproductions = result.reproductions || [];
 
         const statusLabels = { active: 'Activo', sold: 'Vendido', deceased: 'Fallecido' };
         const sexLabels = { male: 'Macho', female: 'Hembra' };
@@ -383,34 +391,29 @@ const AnimalsManager = {
         });
     },
 
-    delete(id) {
+    async delete(id) {
         if (confirm('¿Está seguro de eliminar este animal? También se eliminarán sus registros asociados.')) {
-            DataManager.delete(DB_KEYS.ANIMALS, id);
-
-            // Delete related records
-            const vaccinations = DataManager.getAll(DB_KEYS.VACCINATIONS);
-            DataManager.save(DB_KEYS.VACCINATIONS, vaccinations.filter(v => v.animalId !== id));
-
-            const feedings = DataManager.getAll(DB_KEYS.FEEDING);
-            DataManager.save(DB_KEYS.FEEDING, feedings.filter(f => f.animalId !== id));
-
-            const reproductions = DataManager.getAll(DB_KEYS.REPRODUCTION);
-            DataManager.save(DB_KEYS.REPRODUCTION, reproductions.filter(r => r.animalId !== id));
-
-            Toast.show('Animal eliminado correctamente', 'success');
-            this.render();
-            App.updateDashboard();
+            try {
+                await DataManager.delete(DB_KEYS.ANIMALS, id);
+                Toast.show('Animal eliminado correctamente', 'success');
+                await this.render();
+                await App.updateDashboard();
+            } catch (error) {
+                Toast.show(error.message, 'error');
+            }
         }
     },
 
-    getSelectOptions(filter = null) {
-        let animals = DataManager.getAll(DB_KEYS.ANIMALS).filter(a => a.status === 'active');
+    async getSelectOptions(filter = null) {
+        let animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+        animals = animals.filter(a => a.status === 'active');
         if (filter === 'female') {
             animals = animals.filter(a => a.sex === 'female');
         }
+        const species = await DataManager.getAll(DB_KEYS.SPECIES);
         return animals.map(a => {
-            const species = DataManager.getById(DB_KEYS.SPECIES, a.speciesId);
-            return `<option value="${a.id}">${a.identifier} - ${a.name} (${species?.icon || ''})</option>`;
+            const animalSpecies = species.find(s => s._id === a.speciesId || s.id === a.speciesId);
+            return `<option value="${a._id || a.id}">${a.identifier} - ${a.name} (${animalSpecies?.icon || ''})</option>`;
         }).join('');
     }
 };

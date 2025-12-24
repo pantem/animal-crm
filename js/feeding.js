@@ -13,52 +13,38 @@ const FeedingManager = {
         document.getElementById('feedingDateTo')?.addEventListener('change', () => this.render());
     },
 
-    render() {
-        this.updateAnimalFilter();
-        this.renderStats();
-        this.renderTable();
-        this.renderChart();
+    async render() {
+        await this.updateAnimalFilter();
+        await this.renderStats();
+        await this.renderTable();
+        await this.renderChart();
     },
 
-    updateAnimalFilter() {
+    async updateAnimalFilter() {
         const select = document.getElementById('feedingAnimalFilter');
         if (!select) return;
 
         const current = select.value;
-        select.innerHTML = '<option value="">Todos los animales</option>' + AnimalsManager.getSelectOptions();
+        const options = await AnimalsManager.getSelectOptions();
+        select.innerHTML = '<option value="">Todos los animales</option>' + options;
         select.value = current;
     },
 
-    renderStats() {
-        const feedings = DataManager.getAll(DB_KEYS.FEEDING);
-        const today = new Date().toISOString().split('T')[0];
-
-        const todayTotal = feedings
-            .filter(f => f.date === today)
-            .reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0);
-
-        const weekStart = new Date();
-        weekStart.setDate(weekStart.getDate() - 7);
-        const weekTotal = feedings
-            .filter(f => new Date(f.date) >= weekStart)
-            .reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0);
-
-        const monthStart = new Date();
-        monthStart.setDate(1);
-        const monthTotal = feedings
-            .filter(f => new Date(f.date) >= monthStart)
-            .reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0);
-
-        document.getElementById('todayFeeding').textContent = `${todayTotal.toFixed(1)} kg`;
-        document.getElementById('weekFeeding').textContent = `${weekTotal.toFixed(1)} kg`;
-        document.getElementById('monthFeeding').textContent = `${monthTotal.toFixed(1)} kg`;
+    async renderStats() {
+        const result = await DataManager.getFeedingStats();
+        if (result.success) {
+            document.getElementById('todayFeeding').textContent = `${result.data.today.toFixed(1)} kg`;
+            document.getElementById('weekFeeding').textContent = `${result.data.week.toFixed(1)} kg`;
+            document.getElementById('monthFeeding').textContent = `${result.data.month.toFixed(1)} kg`;
+        }
     },
 
-    renderTable() {
+    async renderTable() {
         const tbody = document.getElementById('feedingTableBody');
         if (!tbody) return;
 
-        let feedings = DataManager.getAll(DB_KEYS.FEEDING);
+        let feedings = await DataManager.getAll(DB_KEYS.FEEDING);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
         const animalFilter = document.getElementById('feedingAnimalFilter')?.value || '';
         const dateFrom = document.getElementById('feedingDateFrom')?.value || '';
         const dateTo = document.getElementById('feedingDateTo')?.value || '';
@@ -88,7 +74,7 @@ const FeedingManager = {
             return;
         }
 
-        tbody.innerHTML = feedings.map(f => this.renderRow(f)).join('');
+        tbody.innerHTML = feedings.map(f => this.renderRow(f, animals)).join('');
 
         tbody.querySelectorAll('.edit-feeding').forEach(btn => {
             btn.addEventListener('click', () => this.showForm(btn.dataset.id));
@@ -98,8 +84,8 @@ const FeedingManager = {
         });
     },
 
-    renderRow(feeding) {
-        const animal = DataManager.getById(DB_KEYS.ANIMALS, feeding.animalId);
+    renderRow(feeding, animals = []) {
+        const animal = animals.find(a => a._id === feeding.animalId || a.id === feeding.animalId);
 
         return `
             <tr>
@@ -110,21 +96,24 @@ const FeedingManager = {
                 <td>${feeding.notes || '-'}</td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-icon edit-feeding" data-id="${feeding.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-feeding" data-id="${feeding.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon edit-feeding" data-id="${feeding._id || feeding.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-feeding" data-id="${feeding._id || feeding.id}" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
         `;
     },
 
-    renderChart() {
+    async renderChart() {
         const canvas = document.getElementById('feedingDetailChart');
         if (!canvas) return;
 
-        const feedings = DataManager.getAll(DB_KEYS.FEEDING);
+        const result = await DataManager.getDailyFeeding(14);
+        if (!result.success) return;
 
-        // Get last 14 days
+        const dailyData = result.data;
+
+        // Create complete date range
         const days = [];
         const data = [];
 
@@ -135,11 +124,8 @@ const FeedingManager = {
 
             days.push(date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
 
-            const dayTotal = feedings
-                .filter(f => f.date === dateStr)
-                .reduce((sum, f) => sum + (parseFloat(f.quantity) || 0), 0);
-
-            data.push(dayTotal);
+            const dayData = dailyData.find(d => d._id === dateStr);
+            data.push(dayData ? dayData.total : 0);
         }
 
         if (this.chart) {
@@ -190,9 +176,10 @@ const FeedingManager = {
         });
     },
 
-    showForm(id = null) {
-        const feeding = id ? DataManager.getById(DB_KEYS.FEEDING, id) : null;
+    async showForm(id = null) {
+        const feeding = id ? await DataManager.getById(DB_KEYS.FEEDING, id) : null;
         const isEdit = !!feeding;
+        const animalOptions = await AnimalsManager.getSelectOptions();
 
         Modal.show({
             title: isEdit ? 'Editar Registro' : 'Nuevo Registro de Alimentación',
@@ -202,7 +189,7 @@ const FeedingManager = {
                         <label class="form-label">Animal *</label>
                         <select class="form-select" name="animalId" required>
                             <option value="">Seleccionar...</option>
-                            ${AnimalsManager.getSelectOptions()}
+                            ${animalOptions}
                         </select>
                     </div>
                     <div class="form-group">
@@ -217,6 +204,7 @@ const FeedingManager = {
                             <option value="Grano">
                             <option value="Balanceado">
                             <option value="Suplemento mineral">
+                            <option value="gestación">
                         </datalist>
                     </div>
                     <div class="form-row">
@@ -236,7 +224,7 @@ const FeedingManager = {
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fecha *</label>
-                        <input type="date" class="form-input" name="date" value="${feeding?.date || new Date().toISOString().split('T')[0]}" required>
+                        <input type="date" class="form-input" name="date" value="${feeding?.date ? feeding.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Notas</label>
@@ -244,7 +232,7 @@ const FeedingManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('feedingForm');
                 const formData = new FormData(form);
 
@@ -262,17 +250,22 @@ const FeedingManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.FEEDING, id, data);
-                    Toast.show('Registro actualizado correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.FEEDING, data);
-                    Toast.show('Registro creado correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.FEEDING, id, data);
+                        Toast.show('Registro actualizado correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.FEEDING, data);
+                        Toast.show('Registro creado correctamente', 'success');
+                    }
 
-                this.render();
-                App.updateDashboard();
-                return true;
+                    await this.render();
+                    await App.updateDashboard();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
@@ -285,12 +278,16 @@ const FeedingManager = {
         }
     },
 
-    delete(id) {
+    async delete(id) {
         if (confirm('¿Está seguro de eliminar este registro?')) {
-            DataManager.delete(DB_KEYS.FEEDING, id);
-            Toast.show('Registro eliminado correctamente', 'success');
-            this.render();
-            App.updateDashboard();
+            try {
+                await DataManager.delete(DB_KEYS.FEEDING, id);
+                Toast.show('Registro eliminado correctamente', 'success');
+                await this.render();
+                await App.updateDashboard();
+            } catch (error) {
+                Toast.show(error.message, 'error');
+            }
         }
     }
 };

@@ -7,9 +7,8 @@ const ReproductionManager = {
     // Helper to format date string without timezone issues
     formatDateString(dateStr) {
         if (!dateStr) return 'N/A';
-        const parts = dateStr.split('-');
-        if (parts.length !== 3) return dateStr;
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        const date = new Date(dateStr);
+        return date.toLocaleDateString('es-ES');
     },
 
     init() {
@@ -39,17 +38,19 @@ const ReproductionManager = {
         }
     },
 
-    render() {
-        this.renderHeatTable();
-        this.renderInseminationTable();
-        this.renderCalendar();
+    async render() {
+        await this.renderHeatTable();
+        await this.renderInseminationTable();
+        await this.renderCalendar();
     },
 
-    renderHeatTable() {
+    async renderHeatTable() {
         const tbody = document.getElementById('heatTableBody');
         if (!tbody) return;
 
-        let heats = DataManager.getAll(DB_KEYS.REPRODUCTION).filter(r => r.type === 'heat');
+        const reproductions = await DataManager.getAll(DB_KEYS.REPRODUCTION);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+        let heats = reproductions.filter(r => r.type === 'heat');
         heats.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (heats.length === 0) {
@@ -64,7 +65,7 @@ const ReproductionManager = {
             return;
         }
 
-        tbody.innerHTML = heats.map(h => this.renderHeatRow(h)).join('');
+        tbody.innerHTML = heats.map(h => this.renderHeatRow(h, animals)).join('');
 
         tbody.querySelectorAll('.edit-heat').forEach(btn => {
             btn.addEventListener('click', () => this.showHeatForm(btn.dataset.id));
@@ -74,10 +75,10 @@ const ReproductionManager = {
         });
     },
 
-    renderHeatRow(heat) {
-        const animal = DataManager.getById(DB_KEYS.ANIMALS, heat.animalId);
-        const nextHeat = this.calculateNextHeat(heat.date);
-        const dueDate = this.calculateDueDate(heat.date);
+    renderHeatRow(heat, animals = []) {
+        const animal = animals.find(a => a._id === heat.animalId || a.id === heat.animalId);
+        const nextHeat = heat.nextHeatDate || this.calculateNextHeat(heat.date);
+        const dueDate = heat.dueDate || this.calculateDueDate(heat.date);
         const intensityLabels = { low: 'Baja', medium: 'Media', high: 'Alta' };
 
         return `
@@ -90,19 +91,21 @@ const ReproductionManager = {
                 <td>${heat.notes || '-'}</td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-icon edit-heat" data-id="${heat.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-heat" data-id="${heat.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon edit-heat" data-id="${heat._id || heat.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-heat" data-id="${heat._id || heat.id}" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
         `;
     },
 
-    renderInseminationTable() {
+    async renderInseminationTable() {
         const tbody = document.getElementById('inseminationTableBody');
         if (!tbody) return;
 
-        let inseminations = DataManager.getAll(DB_KEYS.REPRODUCTION).filter(r => r.type === 'insemination');
+        const reproductions = await DataManager.getAll(DB_KEYS.REPRODUCTION);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
+        let inseminations = reproductions.filter(r => r.type === 'insemination');
         inseminations.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (inseminations.length === 0) {
@@ -117,7 +120,7 @@ const ReproductionManager = {
             return;
         }
 
-        tbody.innerHTML = inseminations.map(i => this.renderInseminationRow(i)).join('');
+        tbody.innerHTML = inseminations.map(i => this.renderInseminationRow(i, animals)).join('');
 
         tbody.querySelectorAll('.edit-insemination').forEach(btn => {
             btn.addEventListener('click', () => this.showInseminationForm(btn.dataset.id));
@@ -127,11 +130,11 @@ const ReproductionManager = {
         });
     },
 
-    renderInseminationRow(insemination) {
-        const animal = DataManager.getById(DB_KEYS.ANIMALS, insemination.animalId);
+    renderInseminationRow(insemination, animals = []) {
+        const animal = animals.find(a => a._id === insemination.animalId || a.id === insemination.animalId);
         const methodLabels = { natural: 'Natural', artificial: 'Artificial' };
         const resultLabels = { pending: 'Pendiente', success: 'Exitosa', failed: 'Fallida' };
-        const dueDate = this.calculateDueDate(insemination.date);
+        const dueDate = insemination.dueDate || this.calculateDueDate(insemination.date);
 
         return `
             <tr>
@@ -143,17 +146,18 @@ const ReproductionManager = {
                 <td><span class="status-badge ${insemination.result || 'pending'}">${resultLabels[insemination.result] || 'Pendiente'}</span></td>
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-icon edit-insemination" data-id="${insemination.id}" title="Editar">✏️</button>
-                        <button class="btn btn-icon delete-insemination" data-id="${insemination.id}" title="Eliminar">🗑️</button>
+                        <button class="btn btn-icon edit-insemination" data-id="${insemination._id || insemination.id}" title="Editar">✏️</button>
+                        <button class="btn btn-icon delete-insemination" data-id="${insemination._id || insemination.id}" title="Eliminar">🗑️</button>
                     </div>
                 </td>
             </tr>
         `;
     },
 
-    showHeatForm(id = null) {
-        const heat = id ? DataManager.getById(DB_KEYS.REPRODUCTION, id) : null;
+    async showHeatForm(id = null) {
+        const heat = id ? await DataManager.getById(DB_KEYS.REPRODUCTION, id) : null;
         const isEdit = !!heat;
+        const animalOptions = await AnimalsManager.getSelectOptions('female');
 
         Modal.show({
             title: isEdit ? 'Editar Registro de Celo' : 'Nuevo Registro de Celo',
@@ -163,13 +167,13 @@ const ReproductionManager = {
                         <label class="form-label">Animal (Hembra) *</label>
                         <select class="form-select" name="animalId" required>
                             <option value="">Seleccionar...</option>
-                            ${AnimalsManager.getSelectOptions('female')}
+                            ${animalOptions}
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Fecha de Celo *</label>
-                            <input type="date" class="form-input" name="date" value="${heat?.date || new Date().toISOString().split('T')[0]}" required>
+                            <input type="date" class="form-input" name="date" value="${heat?.date ? heat.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Intensidad</label>
@@ -187,7 +191,7 @@ const ReproductionManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('heatForm');
                 const formData = new FormData(form);
 
@@ -204,17 +208,22 @@ const ReproductionManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.REPRODUCTION, id, data);
-                    Toast.show('Registro actualizado correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.REPRODUCTION, data);
-                    Toast.show('Celo registrado correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.REPRODUCTION, id, data);
+                        Toast.show('Registro actualizado correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.REPRODUCTION, data);
+                        Toast.show('Celo registrado correctamente', 'success');
+                    }
 
-                this.render();
-                App.updateDashboard();
-                return true;
+                    await this.render();
+                    await App.updateDashboard();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
@@ -226,9 +235,10 @@ const ReproductionManager = {
         }
     },
 
-    showInseminationForm(id = null) {
-        const insemination = id ? DataManager.getById(DB_KEYS.REPRODUCTION, id) : null;
+    async showInseminationForm(id = null) {
+        const insemination = id ? await DataManager.getById(DB_KEYS.REPRODUCTION, id) : null;
         const isEdit = !!insemination;
+        const animalOptions = await AnimalsManager.getSelectOptions('female');
 
         Modal.show({
             title: isEdit ? 'Editar Inseminación' : 'Nueva Inseminación',
@@ -238,13 +248,13 @@ const ReproductionManager = {
                         <label class="form-label">Animal (Hembra) *</label>
                         <select class="form-select" name="animalId" required>
                             <option value="">Seleccionar...</option>
-                            ${AnimalsManager.getSelectOptions('female')}
+                            ${animalOptions}
                         </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Fecha *</label>
-                            <input type="date" class="form-input" name="date" value="${insemination?.date || new Date().toISOString().split('T')[0]}" required>
+                            <input type="date" class="form-input" name="date" value="${insemination?.date ? insemination.date.split('T')[0] : new Date().toISOString().split('T')[0]}" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Método</label>
@@ -278,7 +288,7 @@ const ReproductionManager = {
                     </div>
                 </form>
             `,
-            onConfirm: () => {
+            onConfirm: async () => {
                 const form = document.getElementById('inseminationForm');
                 const formData = new FormData(form);
 
@@ -298,17 +308,22 @@ const ReproductionManager = {
                     return false;
                 }
 
-                if (isEdit) {
-                    DataManager.update(DB_KEYS.REPRODUCTION, id, data);
-                    Toast.show('Registro actualizado correctamente', 'success');
-                } else {
-                    DataManager.add(DB_KEYS.REPRODUCTION, data);
-                    Toast.show('Inseminación registrada correctamente', 'success');
-                }
+                try {
+                    if (isEdit) {
+                        await DataManager.update(DB_KEYS.REPRODUCTION, id, data);
+                        Toast.show('Registro actualizado correctamente', 'success');
+                    } else {
+                        await DataManager.add(DB_KEYS.REPRODUCTION, data);
+                        Toast.show('Inseminación registrada correctamente', 'success');
+                    }
 
-                this.render();
-                App.updateDashboard();
-                return true;
+                    await this.render();
+                    await App.updateDashboard();
+                    return true;
+                } catch (error) {
+                    Toast.show(error.message, 'error');
+                    return false;
+                }
             }
         });
 
@@ -320,33 +335,29 @@ const ReproductionManager = {
         }
     },
 
-    delete(id) {
+    async delete(id) {
         if (confirm('¿Está seguro de eliminar este registro?')) {
-            DataManager.delete(DB_KEYS.REPRODUCTION, id);
-            Toast.show('Registro eliminado correctamente', 'success');
-            this.render();
-            App.updateDashboard();
+            try {
+                await DataManager.delete(DB_KEYS.REPRODUCTION, id);
+                Toast.show('Registro eliminado correctamente', 'success');
+                await this.render();
+                await App.updateDashboard();
+            } catch (error) {
+                Toast.show(error.message, 'error');
+            }
         }
     },
 
-    calculateNextHeat(lastHeatDate) {
-        const parts = lastHeatDate.split('-');
-        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+    calculateNextHeat(dateStr) {
+        const date = new Date(dateStr);
         date.setDate(date.getDate() + this.HEAT_CYCLE_DAYS);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return date.toISOString();
     },
 
     calculateDueDate(dateStr) {
-        const parts = dateStr.split('-');
-        const date = new Date(parts[0], parts[1] - 1, parts[2]);
+        const date = new Date(dateStr);
         date.setDate(date.getDate() + this.GESTATION_DAYS);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        return date.toISOString();
     },
 
     changeMonth(delta) {
@@ -354,7 +365,7 @@ const ReproductionManager = {
         this.renderCalendar();
     },
 
-    renderCalendar() {
+    async renderCalendar() {
         const calendar = document.getElementById('reproductionCalendar');
         const monthLabel = document.getElementById('currentReproMonth');
         if (!calendar || !monthLabel) return;
@@ -369,16 +380,11 @@ const ReproductionManager = {
         const startDay = firstDay.getDay();
         const daysInMonth = lastDay.getDate();
 
-        // Get reproduction events and predicted heats
-        const reproductions = DataManager.getAll(DB_KEYS.REPRODUCTION);
+        // Get reproduction events
+        const reproductions = await DataManager.getAll(DB_KEYS.REPRODUCTION);
+        const animals = await DataManager.getAll(DB_KEYS.ANIMALS);
         const heats = reproductions.filter(r => r.type === 'heat');
         const inseminations = reproductions.filter(r => r.type === 'insemination');
-
-        // Calculate predicted heats
-        const predictedHeats = heats.map(h => ({
-            animalId: h.animalId,
-            date: this.calculateNextHeat(h.date)
-        }));
 
         // Build calendar
         const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -395,25 +401,19 @@ const ReproductionManager = {
             const dateStr = date.toISOString().split('T')[0];
             const isToday = date.toDateString() === today.toDateString();
 
-            const dayHeats = heats.filter(h => h.date === dateStr);
-            const dayInseminations = inseminations.filter(i => i.date === dateStr);
-            const dayPredicted = predictedHeats.filter(p => p.date === dateStr);
+            const dayHeats = heats.filter(h => h.date && h.date.split('T')[0] === dateStr);
+            const dayInseminations = inseminations.filter(i => i.date && i.date.split('T')[0] === dateStr);
 
             let eventDots = '';
             dayHeats.forEach(h => {
-                const animal = DataManager.getById(DB_KEYS.ANIMALS, h.animalId);
+                const animal = animals.find(a => a._id === h.animalId || a.id === h.animalId);
                 const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
                 eventDots += `<span class="event-dot heat" title="❤️ Celo: ${animalName}"></span>`;
             });
             dayInseminations.forEach(i => {
-                const animal = DataManager.getById(DB_KEYS.ANIMALS, i.animalId);
+                const animal = animals.find(a => a._id === i.animalId || a.id === i.animalId);
                 const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
                 eventDots += `<span class="event-dot insemination" title="🧬 Inseminación: ${animalName}"></span>`;
-            });
-            dayPredicted.forEach(p => {
-                const animal = DataManager.getById(DB_KEYS.ANIMALS, p.animalId);
-                const animalName = animal ? `${animal.identifier} - ${animal.name}` : 'Animal desconocido';
-                eventDots += `<span class="event-dot predicted" title="⏳ Celo estimado: ${animalName}"></span>`;
             });
 
             html += `
@@ -427,19 +427,8 @@ const ReproductionManager = {
         calendar.innerHTML = html;
     },
 
-    getUpcomingEvents() {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const nextWeek = new Date(today);
-        nextWeek.setDate(nextWeek.getDate() + 14);
-
-        const heats = DataManager.getAll(DB_KEYS.REPRODUCTION).filter(r => r.type === 'heat');
-
-        return heats.map(h => {
-            const animal = DataManager.getById(DB_KEYS.ANIMALS, h.animalId);
-            const predictedDate = this.calculateNextHeat(h.date);
-            return { animal, predictedDate, type: 'predicted_heat' };
-        }).filter(e => e.predictedDate >= today && e.predictedDate <= nextWeek)
-            .sort((a, b) => a.predictedDate - b.predictedDate);
+    async getUpcomingEvents() {
+        const result = await DataManager.getUpcomingHeats(14);
+        return result.success ? result.data : [];
     }
 };
