@@ -11,7 +11,37 @@ const App = {
         this.bindSettings();
         this.initModules();
         this.handleHashChange();
+        this.bindMobileMenu();
         window.addEventListener('hashchange', () => this.handleHashChange());
+    },
+
+    bindMobileMenu() {
+        const toggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        const toggleMenu = () => {
+            sidebar?.classList.toggle('active');
+            overlay?.classList.toggle('active');
+        };
+
+        const closeMenu = () => {
+            sidebar?.classList.remove('active');
+            overlay?.classList.remove('active');
+        };
+
+        toggle?.addEventListener('click', toggleMenu);
+        overlay?.addEventListener('click', closeMenu);
+
+        // Close when clicking a link (for mobile UX)
+        navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth <= 768) {
+                    closeMenu();
+                }
+            });
+        });
     },
 
     // Theme Management
@@ -232,7 +262,7 @@ const App = {
                 <div class="table-container">
                     <table class="data-table" id="animalsTable">
                         <thead>
-                            <tr><th>Foto</th><th>ID</th><th>Nombre</th><th>Especie</th><th>Fecha Nacimiento</th><th>Estado</th><th>Acciones</th></tr>
+                            <tr><th>#</th><th>Foto</th><th>ID</th><th>Nombre</th><th>Especie</th><th>Fecha Nacimiento</th><th>Estado</th><th>Acciones</th></tr>
                         </thead>
                         <tbody id="animalsTableBody"></tbody>
                     </table>

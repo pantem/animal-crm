@@ -30,7 +30,7 @@ const AnimalsManager = {
             return;
         }
 
-        tbody.innerHTML = animals.map(a => this.renderRow(a, species)).join('');
+        tbody.innerHTML = animals.map((a, index) => this.renderRow(a, species, index + 1)).join('');
 
         tbody.querySelectorAll('.view-animal').forEach(btn => {
             btn.addEventListener('click', () => this.showDetails(btn.dataset.id));
@@ -43,7 +43,7 @@ const AnimalsManager = {
         });
     },
 
-    renderRow(animal, species = []) {
+    renderRow(animal, species = [], index = 0) {
         const animalSpecies = species.find(s => s._id === animal.speciesId || s.id === animal.speciesId);
         const statusClass = animal.status || 'active';
         const statusLabels = { active: 'Activo', sold: 'Vendido', deceased: 'Fallecido' };
@@ -53,6 +53,7 @@ const AnimalsManager = {
 
         return `
             <tr>
+                <td><span style="color: var(--text-muted); font-weight: 500;">${index}</span></td>
                 <td>${imageHtml}</td>
                 <td><strong>${animal.identifier}</strong></td>
                 <td>${animal.name}</td>
