@@ -23,14 +23,14 @@ app.use(express.json({ limit: '10mb' }));  // For base64 images
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files (frontend)
-app.use(express.static(__dirname));
+app.use(express.static(path.join(process.cwd())));
 
 // API Routes
 app.use('/api', apiRoutes);
 
 // Serve index.html for root
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'index.html'));
 });
 
 // Error handling middleware
