@@ -3,14 +3,39 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+let cached = global.mongoose;
+
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
+
 const connectDB = async () => {
-    try {
-        const conn = await mongoose.connect(process.env.MONGO_URI);
-        console.log(`🚀 MongoDB Conectado: ${conn.connection.host}`);
-    } catch (error) {
-        console.error(`❌ Error: ${error.message}`);
-        process.exit(1);
+    if (cached.conn) {
+        console.log('🚀 Usando conexión MongoDB existente en caché');
+        return cached.conn;
     }
+
+    if (!cached.promise) {
+        const opts = {
+            bufferCommands: false, // Disable buffering
+        };
+
+        console.log('🔄 Iniciando nueva conexión a MongoDB...');
+        cached.promise = mongoose.connect(process.env.MONGO_URI, opts).then((mongoose) => {
+            console.log(`🚀 MongoDB Conectado: ${mongoose.connection.host}`);
+            return mongoose;
+        });
+    }
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (e) {
+        cached.promise = null;
+        console.error('❌ Error de conexión:', e);
+        throw e;
+    }
+
+    return cached.conn;
 };
 
 export default connectDB;
